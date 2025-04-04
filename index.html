@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Faltas | UNIFESP</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- <link rel="icon" href="/favicon.svg" type="image/svg+xml"> -->
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .disciplina-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        
+        .disciplina-item:last-child {
+            border-bottom: none;
+        }
+        
+        .progress {
+            height: 10px;
+            margin-top: 5px;
+        }
+        
+        .horas-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .btn-counter {
+            width: 35px;
+            height: 35px;
+            font-weight: bold;
+        }
+        
+        .horas-display {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .btn-confirmar {
+            background-color: #198754;
+            font-weight: bold;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+        
+        .limite-text {
+            font-size: 0.8rem;
+            color: #dc3545;
+            display: none;
+        }
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-img {
+            max-height: 100px;
+            margin-right: 20px;
+        }
+        
+        .header-text {
+            text-align: center;
+        }
+        footer {
+            width: 100%;
+            background-color: #f1f1f1;
+            text-align: center;
+            padding: 10px 0;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 14px;
+            color: #333;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-logo">
+            <img src="logo-epm.png" alt="Logo EPM/UNIFESP" class="logo-img">
+            <div class="header-text">
+                <h1>Controle de Faltas em Horas</h1>
+                <h3>Medicina UNIFESP</h3>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h2 class="mb-0">Disciplinas</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="disciplinas-container" id="disciplinasContainer">
+                            <!-- As disciplinas serão adicionadas aqui pelo JavaScript -->
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-confirmar btn-lg" id="confirmarBtn">
+                                <i class="bi bi-check-circle"></i> Confirmar e Salvar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast de confirmação -->
+    <div class="toast-container">
+        <div id="liveToast" class="toast align-items-center text-white bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Dados salvos com sucesso!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        Feito por Matheus de Arruda Rodrigues Turma EPM 91 e DeepSeek!
+    </footer>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Lista de disciplinas com seus limites de horas
+        const disciplinas = [
+            { nome: "Bioética", limite: 9 },
+            { nome: "Infectologia", limite: 21 },
+            { nome: "Medicina Baseada em Evidências", limite: 9 },
+            { nome: "Medicina Legal", limite: 10 },
+            { nome: "Oftalmologia I", limite: 9 },
+            { nome: "Oncologia", limite: 10 },
+            { nome: "Psiquiatria", limite: 18 },
+            { nome: "Semiologia da Mulher", limite: 27 },
+            { nome: "Semiologia das Relações Humanas", limite: 9 },
+            { nome: "Semiologia do Adulto", limite: 71 },
+            { nome: "Semiologia Pediátrica", limite: 30 },
+            { nome: "Semiologia Radiologia", limite: 9 },
+            { nome: "Sistema Cardiovascular", limite: 32 },
+            { nome: "TOCE", limite: 32 },
+            { nome: "Vigilância em saúde", limite: 20 }
+        ];
+        
+        // Ordena as disciplinas alfabeticamente
+        disciplinas.sort((a, b) => a.nome.localeCompare(b.nome));
+        
+        // Objeto para armazenar as horas de falta
+        let horasFaltas = {};
+        
+        // Carrega os dados salvos do localStorage, se existirem
+        function carregarDados() {
+            const dadosSalvos = localStorage.getItem('horasFaltas');
+            if (dadosSalvos) {
+                horasFaltas = JSON.parse(dadosSalvos);
+            } else {
+                // Inicializa todas as disciplinas com 0 horas
+                disciplinas.forEach(disciplina => {
+                    horasFaltas[disciplina.nome] = 0;
+                });
+            }
+        }
+        
+        // Cria os elementos HTML para cada disciplina
+        function criarDisciplinas() {
+            const container = document.getElementById('disciplinasContainer');
+            
+            disciplinas.forEach(disciplina => {
+                const divDisciplina = document.createElement('div');
+                divDisciplina.className = 'disciplina-item';
+                
+                // Nome da disciplina e limite
+                const nomeDiv = document.createElement('div');
+                nomeDiv.className = 'd-flex justify-content-between align-items-center mb-2';
+                
+                const nome = document.createElement('h5');
+                nome.className = 'mb-0';
+                nome.textContent = disciplina.nome;
+                
+                const limiteSpan = document.createElement('span');
+                limiteSpan.className = 'horas-info';
+                limiteSpan.textContent = `Limite: ${disciplina.limite}h`;
+                
+                nomeDiv.appendChild(nome);
+                nomeDiv.appendChild(limiteSpan);
+                
+                // Contador de horas
+                const contadorDiv = document.createElement('div');
+                contadorDiv.className = 'd-flex align-items-center';
+                
+                const btnMenos = document.createElement('button');
+                btnMenos.className = 'btn btn-outline-primary btn-counter me-2';
+                btnMenos.innerHTML = '<i class="bi bi-dash-lg"></i>';
+                btnMenos.addEventListener('click', () => {
+                    if (horasFaltas[disciplina.nome] > 0) {
+                        horasFaltas[disciplina.nome]--;
+                        atualizarDisciplina(disciplina);
+                    }
+                });
+                
+                const spanHoras = document.createElement('span');
+                spanHoras.className = 'horas-display';
+                spanHoras.id = `horas-${disciplina.nome.replace(/\s+/g, '-')}`;
+                spanHoras.textContent = horasFaltas[disciplina.nome];
+                
+                const btnMais = document.createElement('button');
+                btnMais.className = 'btn btn-outline-primary btn-counter ms-2';
+                btnMais.innerHTML = '<i class="bi bi-plus-lg"></i>';
+                btnMais.addEventListener('click', () => {
+                    if (horasFaltas[disciplina.nome] < disciplina.limite) {
+                        horasFaltas[disciplina.nome]++;
+                        atualizarDisciplina(disciplina);
+                    }
+                });
+                
+                contadorDiv.appendChild(btnMenos);
+                contadorDiv.appendChild(spanHoras);
+                contadorDiv.appendChild(btnMais);
+                
+                // Barra de progresso
+                const progressDiv = document.createElement('div');
+                progressDiv.className = 'mt-2';
+                
+                const progressBar = document.createElement('div');
+                progressBar.className = 'progress';
+                progressBar.role = 'progressbar';
+                progressBar.setAttribute('aria-valuenow', '0');
+                progressBar.setAttribute('aria-valuemin', '0');
+                progressBar.setAttribute('aria-valuemax', disciplina.limite);
+                progressBar.id = `progress-${disciplina.nome.replace(/\s+/g, '-')}`;
+                
+                const progressBarInner = document.createElement('div');
+                progressBarInner.className = 'progress-bar';
+                progressBarInner.id = `progress-bar-${disciplina.nome.replace(/\s+/g, '-')}`;
+                
+                progressBar.appendChild(progressBarInner);
+                progressDiv.appendChild(progressBar);
+                
+                // Mensagem de limite atingido
+                const limiteMsg = document.createElement('div');
+                limiteMsg.className = 'limite-text';
+                limiteMsg.id = `limite-msg-${disciplina.nome.replace(/\s+/g, '-')}`;
+                limiteMsg.textContent = 'Limite de horas atingido!';
+                
+                // Monta o elemento completo
+                divDisciplina.appendChild(nomeDiv);
+                divDisciplina.appendChild(contadorDiv);
+                divDisciplina.appendChild(progressDiv);
+                divDisciplina.appendChild(limiteMsg);
+                
+                container.appendChild(divDisciplina);
+                
+                // Atualiza a barra de progresso
+                atualizarDisciplina(disciplina);
+            });
+        }
+        
+        // Atualiza o display e a barra de progresso para uma disciplina
+        function atualizarDisciplina(disciplina) {
+            const horasAtuais = horasFaltas[disciplina.nome];
+            const elementoHoras = document.getElementById(`horas-${disciplina.nome.replace(/\s+/g, '-')}`);
+            const progressBar = document.getElementById(`progress-bar-${disciplina.nome.replace(/\s+/g, '-')}`);
+            const limiteMsg = document.getElementById(`limite-msg-${disciplina.nome.replace(/\s+/g, '-')}`);
+            
+            if (elementoHoras) {
+                elementoHoras.textContent = horasAtuais;
+            }
+            
+            if (progressBar) {
+                const percentual = (horasAtuais / disciplina.limite) * 100;
+                progressBar.style.width = `${percentual}%`;
+                
+                // Muda a cor conforme o percentual
+                if (percentual >= 80) {
+                    progressBar.className = 'progress-bar bg-danger';
+                } else if (percentual >= 50) {
+                    progressBar.className = 'progress-bar bg-warning';
+                } else {
+                    progressBar.className = 'progress-bar bg-success';
+                }
+            }
+            
+            // Mostra/oculta mensagem de limite
+            if (limiteMsg) {
+                limiteMsg.style.display = horasAtuais >= disciplina.limite ? 'block' : 'none';
+            }
+        }
+        
+        // Salva os dados no localStorage
+        function salvarDados() {
+            localStorage.setItem('horasFaltas', JSON.stringify(horasFaltas));
+            
+            // Mostra o toast de confirmação
+            const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+            toast.show();
+        }
+        
+        // Inicializa a aplicação
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarDados();
+            criarDisciplinas();
+            
+            // Configura o botão de confirmar
+            document.getElementById('confirmarBtn').addEventListener('click', salvarDados);
+        });
+    </script>
+</body>
+</html>
