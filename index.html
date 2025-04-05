@@ -101,6 +101,42 @@
             color: #333;
             margin-top: 20px;
         }
+
+        .btn-reset {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 3px;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-reset:hover {
+            background-color: #e0a800;
+        }
+        /* Estilo para os botões flutuantes */
+        .position-fixed {
+            z-index: 1000;
+        }
+
+        /* Efeitos de hover */
+        #downloadPdfBtn:hover, #backToTopBtn:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s;
+        }
+        /* Estilo para os botões de arquivo */
+#saveToTxtBtn, #loadFromTxtBtn {
+    width: 180px;
+}
+
+/* Feedback visual para upload */
+#fileInput {
+    display: none;
+}
     </style>
 </head>
 <body>
@@ -146,6 +182,40 @@
             </div>
         </div>
     </div>
+
+<!-- Botão Voltar ao Topo -->
+<button id="backToTopBtn" class="btn btn-primary position-fixed bottom-0 start-0 m-3 rounded-circle" style="width: 50px; height: 50px; display: none;" title="Voltar ao topo">
+    <i class="bi bi-arrow-up"></i>
+</button>
+<!-- Adicione junto com os outros botões -->
+<div class="position-fixed bottom-0 end-0 m-3 d-flex flex-column">
+    <button id="saveToTxtBtn" class="btn btn-success mb-2">
+        <i class="bi bi-save"></i> Salvar em TXT
+    </button>
+    <button id="loadFromTxtBtn" class="btn btn-warning">
+        <i class="bi bi-upload"></i> Carregar de TXT
+    </button>
+</div>
+
+<!-- Input oculto para carregar arquivos -->
+<input type="file" id="fileInput" accept=".txt" style="display: none;">
+<script>
+// Mostrar/ocultar botão quando rolar a página
+window.addEventListener('scroll', function() {
+    const backToTopBtn = document.getElementById('backToTopBtn');
+    if (window.pageYOffset > 300) {
+        backToTopBtn.style.display = 'block';
+    } else {
+        backToTopBtn.style.display = 'none';
+    }
+});
+
+// Rolagem suave para o topo
+document.getElementById('backToTopBtn').addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+
     <footer>
         Feito por Matheus de Arruda Rodrigues Turma EPM 91 e DeepSeek!
     </footer>
@@ -217,37 +287,50 @@
                 nomeDiv.appendChild(limiteSpan);
                 
                 // Contador de horas
-                const contadorDiv = document.createElement('div');
-                contadorDiv.className = 'd-flex align-items-center';
-                
-                const btnMenos = document.createElement('button');
-                btnMenos.className = 'btn btn-outline-primary btn-counter me-2';
-                btnMenos.innerHTML = '<i class="bi bi-dash-lg"></i>';
-                btnMenos.addEventListener('click', () => {
-                    if (horasFaltas[disciplina.nome] > 0) {
-                        horasFaltas[disciplina.nome]--;
-                        atualizarDisciplina(disciplina);
-                    }
-                });
-                
-                const spanHoras = document.createElement('span');
-                spanHoras.className = 'horas-display';
-                spanHoras.id = `horas-${disciplina.nome.replace(/\s+/g, '-')}`;
-                spanHoras.textContent = horasFaltas[disciplina.nome];
-                
-                const btnMais = document.createElement('button');
-                btnMais.className = 'btn btn-outline-primary btn-counter ms-2';
-                btnMais.innerHTML = '<i class="bi bi-plus-lg"></i>';
-                btnMais.addEventListener('click', () => {
-                    if (horasFaltas[disciplina.nome] < disciplina.limite) {
-                        horasFaltas[disciplina.nome]++;
-                        atualizarDisciplina(disciplina);
-                    }
-                });
-                
-                contadorDiv.appendChild(btnMenos);
-                contadorDiv.appendChild(spanHoras);
-                contadorDiv.appendChild(btnMais);
+const contadorDiv = document.createElement('div');
+contadorDiv.className = 'd-flex align-items-center';
+
+const btnMenos = document.createElement('button');
+btnMenos.className = 'btn btn-outline-primary btn-counter me-2';
+btnMenos.innerHTML = '<i class="bi bi-dash-lg"></i>';
+btnMenos.addEventListener('click', () => {
+    if (horasFaltas[disciplina.nome] > 0) {
+        horasFaltas[disciplina.nome]--;
+        atualizarDisciplina(disciplina);
+    }
+});
+
+const spanHoras = document.createElement('span');
+spanHoras.className = 'horas-display';
+spanHoras.id = `horas-${disciplina.nome.replace(/\s+/g, '-')}`;
+spanHoras.textContent = horasFaltas[disciplina.nome];
+
+const btnMais = document.createElement('button');
+btnMais.className = 'btn btn-outline-primary btn-counter ms-2';
+btnMais.innerHTML = '<i class="bi bi-plus-lg"></i>';
+btnMais.addEventListener('click', () => {
+    if (horasFaltas[disciplina.nome] < disciplina.limite) {
+        horasFaltas[disciplina.nome]++;
+        atualizarDisciplina(disciplina);
+    }
+});
+
+// Botão de reset
+const btnReset = document.createElement('button');
+btnReset.className = 'btn btn-reset ms-2';
+btnReset.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i>';
+btnReset.title = 'Zerar contador';
+btnReset.addEventListener('click', () => {
+    horasFaltas[disciplina.nome] = 0;
+    atualizarDisciplina(disciplina);
+});
+
+contadorDiv.appendChild(btnMenos);
+contadorDiv.appendChild(spanHoras);
+contadorDiv.appendChild(btnMais);
+contadorDiv.appendChild(btnReset);  
+
+// Adiciona o botão de reset
                 
                 // Barra de progresso
                 const progressDiv = document.createElement('div');
@@ -335,6 +418,99 @@
             // Configura o botão de confirmar
             document.getElementById('confirmarBtn').addEventListener('click', salvarDados);
         });
+        // Mostrar/ocultar botão quando rolar a página
+window.addEventListener('scroll', function() {
+    const backToTopBtn = document.getElementById('backToTopBtn');
+    if (window.pageYOffset > 300) {
+        backToTopBtn.style.display = 'block';
+    } else {
+        backToTopBtn.style.display = 'none';
+    }
+});
+
+// Rolagem suave para o topo
+document.getElementById('backToTopBtn').addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+// Função para salvar dados em TXT
+document.getElementById('saveToTxtBtn').addEventListener('click', () => {
+    // Criar objeto com todos os dados
+    const dadosCompletos = {
+        timestamp: new Date().toISOString(),
+        horasFaltas: horasFaltas,
+        disciplinas: disciplinas
+    };
+    
+    // Converter para JSON formatado
+    const conteudo = JSON.stringify(dadosCompletos, null, 2);
+    
+    // Criar blob e link para download
+    const blob = new Blob([conteudo], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_faltas_${new Date().toISOString().split('T')[0]}.txt`;
+    
+    // Disparar o download
+    document.body.appendChild(a);
+    a.click();
+    
+    // Limpar
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Feedback visual
+    showToast('Dados salvos em arquivo TXT!');
+});
+
+// Função para carregar dados de TXT
+document.getElementById('loadFromTxtBtn').addEventListener('click', () => {
+    document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const dados = JSON.parse(e.target.result);
+            
+            // Validar a estrutura do arquivo
+            if (!dados.horasFaltas || !dados.disciplinas) {
+                throw new Error("Formato de arquivo inválido");
+            }
+            
+            // Atualizar os dados na memória
+            horasFaltas = dados.horasFaltas;
+            
+            // Atualizar a interface
+            disciplinas.forEach(disciplina => {
+                atualizarDisciplina(disciplina);
+            });
+            
+            // Salvar também no localStorage como cache
+            localStorage.setItem('horasFaltas', JSON.stringify(horasFaltas));
+            
+            showToast('Dados carregados com sucesso!');
+        } catch (error) {
+            console.error("Erro ao carregar arquivo:", error);
+            showToast('Erro: Arquivo inválido', 'danger');
+        }
+    };
+    reader.readAsText(file);
+});
+
+// Função auxiliar para mostrar notificação
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('liveToast');
+    toast.querySelector('.toast-body').textContent = message;
+    toast.className = `toast align-items-center text-white bg-${type}`;
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+}
     </script>
 </body>
 </html>
